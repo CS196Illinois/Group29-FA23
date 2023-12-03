@@ -25,6 +25,10 @@ public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.
         this.days = days;
     }
 
+    public CalendarViewHolder(View view, OnItemListener onItemListener, ArrayList<LocalDate> days) {
+        super();
+    }
+
     @Override
     public void onClick(View view)
     {
