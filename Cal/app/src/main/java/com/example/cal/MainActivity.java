@@ -1,5 +1,9 @@
 package com.example.cal;
 
+import static com.example.cal.CalendarUtils.daysInMonthArray;
+import static com.example.cal.CalendarUtils.monthYearFromDate;
+
+import android.content.Intent;
 import android.os.Bundle;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,67 +13,71 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.cal.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Locale;
 
-    private AppBarConfiguration appBarConfiguration;
-private ActivityMainBinding binding;
+public class MainActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener {
+
+    private TextView monthYearText;
+    private RecyclerView calendarRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-     binding = ActivityMainBinding.inflate(getLayoutInflater());
-     setContentView(binding.getRoot());
-
-        setSupportActionBar(binding.toolbar);
-
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
-    }
-@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        setContentView(R.layout.activity_main);
+        initWidgets();
+        CalendarUtils.selectedDate = LocalDate.now();
+        setMonthView();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+    private void initWidgets() {
+        calendarRecyclerView = findViewById(R.id.calendarRecyclerView);
+        monthYearText = findViewById(R.id.monthYearTV);
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+    private void setMonthView() {
+        monthYearText.setText(monthYearFromDate(CalendarUtils.selectedDate));
+        ArrayList<String> daysInMonth = daysInMonthArray(CalendarUtils.selectedDate);
+        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 7);
+        calendarRecyclerView.setLayoutManager(layoutManager);
+        calendarRecyclerView.setAdapter(calendarAdapter);
+
+    }
+
+
+    public void previousMonthAction(View view) {
+        CalendarUtils.selectedDate = CalendarUtils.selectedDate.minusMonths(1);
+        setMonthView();
     }
 
     public void nextMonthAction(View view) {
+        CalendarUtils.selectedDate = CalendarUtils.selectedDate.plusMonths(1);
+        setMonthView();
+    }
+
+    @Override
+    public void onItemClick(int position, String dayText) {
+        if (dayText.equals("")) {
+            String message = "Selected Date " + dayText + " " +  monthYearFromDate(CalendarUtils.selectedDate);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void weeklyAction(View view) {
+        startActivity(new Intent(this, WeekViewActivity.class));
     }
 }
